@@ -12,7 +12,8 @@
        @bind-SelectedRows="selectedRows"
        OnChange="OnChange"
        Size="TableSize.Small"
-       RowKey="x => x.Id">
+       RowKey="x => x.Id"
+       ScrollX="1500" ScrollY="300" >
     <Selection Key="@(context.Id.ToString())" />
 
     @foreach (var column in GetSortedColumnConfigs())
@@ -21,13 +22,13 @@
         {
             @if (column.InputType == "Switch")
             {
-                <PropertyColumn Style="@column.Width" Title="@column.Title" Property="@(c => ((WeatherForecast)c).Hot)">
+                <PropertyColumn Style="@column.Width" Title="@column.Title" Property="@(c => ((WeatherForecast)c).Hot)" Fixed="@column.Fixed">
                     <Switch @bind-Value="((WeatherForecast)context).Hot"></Switch>
                 </PropertyColumn>
             }
             else if (column.InputType == "Button")
             {
-                <ActionColumn Style="@column.Width" Title="@column.Title">
+                <ActionColumn Style="@column.Width" Title="@column.Title"Fixed="@column.Fixed" >
                     <Space>
                         <SpaceItem><Button Danger OnClick="@(() => Delete(((WeatherForecast)context).Id))">Delete</Button></SpaceItem>
                     </Space>
@@ -35,7 +36,7 @@
             }
            else if (column.InputType == "Dropdown")
             {
-                <PropertyColumn Title="@column.Title" Property="@(c => ((WeatherForecast)c).Summary)">
+                <PropertyColumn Title="@column.Title" Property="@(c => ((WeatherForecast)c).Summary)" Fixed="@column.Fixed">
                     <Select @bind-Value="((WeatherForecast)context).Summary">
                         <SelectOptions>
                         @foreach (var option in column.Options)
@@ -52,7 +53,8 @@
                                 Property="@(c => typeof(WeatherForecast).GetProperty(column.PropertyName).GetValue(c))"
                                 Format="@column.Format"
                                 Style="@column.Width"
-                                Sortable="@column.Sortable">
+                                Sortable="@column.Sortable"
+                                Fixed="@column.Fixed">
                 </PropertyColumn>
             }
         }
@@ -91,14 +93,14 @@
 
     private List<ColumnConfig> columnConfigs = new List<ColumnConfig>
     {
-        new ColumnConfig { Title = "Identity", PropertyName = "Id", Sortable = true, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 6 },
-        new ColumnConfig { Title = "Date", PropertyName = "Date", Sortable = true, Visible = true, Width = "150px", InputType = "Date", ColumnIndex = 1 },
-        new ColumnConfig { Title = "Temp. (C)", PropertyName = "TemperatureC", Sortable = true, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 2 },
+        new ColumnConfig { Title = "Identity", PropertyName = "Id", Sortable = true, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 6  },
+        new ColumnConfig { Title = "Date", PropertyName = "Date", Sortable = true, Visible = true, Width = "150px", InputType = "Date", ColumnIndex = 1},
+        new ColumnConfig { Title = "Temp. (C)", PropertyName = "TemperatureC", Sortable = true, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 7 },
         new ColumnConfig { Title = "Temp. (F)", PropertyName = "TemperatureF", Sortable = false, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 3 },
         new ColumnConfig { Title = "Hot", PropertyName = "Hot", Sortable = false, Visible = true, Width = "100px", InputType = "Switch", ColumnIndex = 4 },
-        new ColumnConfig { Title = "Summary", PropertyName = "Summary", Sortable = true, Visible = true, Width = "200px", InputType = "TextBox", ColumnIndex = 5 },
-        new ColumnConfig { Title = "Action", PropertyName = "Action", Sortable = false, Visible = true, Width = "150px", InputType = "Button", ColumnIndex = 1 },
-        new ColumnConfig { Title = "Summary Dropdown", PropertyName = "Summary", Sortable = false, Visible = true, Width = "200px", InputType = "Dropdown", ColumnIndex = 7, Options = new List<string> { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" } }
+        new ColumnConfig { Title = "Summary", PropertyName = "Summary", Sortable = true, Visible = true, Width = "200px", InputType = "TextBox", ColumnIndex = 5},
+        new ColumnConfig { Title = "Action", PropertyName = "Action", Sortable = false, Visible = true, Width = "200px", InputType = "Button", ColumnIndex = 8,Fixed = "right" },
+        new ColumnConfig { Title = "Summary Dropdown", PropertyName = "Summary", Sortable = false, Visible = true,Width = "300px", InputType = "Dropdown", ColumnIndex = 2, Options = new List<string> { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" } }
     };
 
 
@@ -113,6 +115,7 @@
         public string InputType { get; set; } // e.g., "Switch", "TextBox", "Button"
         public int ColumnIndex { get; set; }
         public List<string> Options { get; set; } // Options for Dropdown
+        public string Fixed { get; set; }
     }
 
     protected override async Task OnInitializedAsync()
