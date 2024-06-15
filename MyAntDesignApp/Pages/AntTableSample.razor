@@ -13,37 +13,39 @@
        OnChange="OnChange"
        Size="TableSize.Small"
        RowKey="x => x.Id"
-       ScrollX="1500" ScrollY="300" >
+       ScrollX="1500" ScrollY="300">
     <Selection Key="@(context.Id.ToString())" />
 
     @foreach (var column in GetSortedColumnConfigs())
     {
         if (column.Visible)
         {
-            @if (column.InputType == "Switch")
+            if (column.InputType == "Switch")
             {
-                <PropertyColumn Style="@column.Width" Title="@column.Title" Property="@(c => ((WeatherForecast)c).Hot)" Fixed="@column.Fixed">
+                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => ((WeatherForecast)c).Hot)" Fixed="@column.Fixed">
                     <Switch @bind-Value="((WeatherForecast)context).Hot"></Switch>
                 </PropertyColumn>
             }
             else if (column.InputType == "Button")
             {
-                <ActionColumn Style="@column.Width" Title="@column.Title"Fixed="@column.Fixed" >
+                <ActionColumn Width="@column.Width" Title="@column.Title" Fixed="@column.Fixed">
                     <Space>
                         <SpaceItem><Button Danger OnClick="@(() => Delete(((WeatherForecast)context).Id))">Delete</Button></SpaceItem>
                     </Space>
                 </ActionColumn>
             }
-           else if (column.InputType == "Dropdown")
+            else if (column.InputType == "Dropdown")
             {
-                <PropertyColumn Title="@column.Title" Property="@(c => ((WeatherForecast)c).Summary)" Fixed="@column.Fixed">
-                    <Select @bind-Value="((WeatherForecast)context).Summary">
-                        <SelectOptions>
-                        @foreach (var option in column.Options)
-                        {
-                            <SelectOption TItemValue ="string" TItem="string" Label="@option" Value="@option"/>
-                        }
-                        </SelectOptions>
+                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => ((WeatherForecast)c).Summary)" Fixed="@column.Fixed">
+                    <Select TItem="SummaryOption"
+                            TItemValue="string"
+                            DataSource="@(column.Options.Cast<SummaryOption>().ToList())"
+                            @bind-Value="((WeatherForecast)context).Summary"
+                            LabelName="@nameof(SummaryOption.Name)"
+                            ValueName="@nameof(SummaryOption.Value)"
+                            Placeholder="Select a summary"
+                            DefaultActiveFirstOption="false"
+                            EnableSearch>
                     </Select>
                 </PropertyColumn>
             }
@@ -52,7 +54,7 @@
                 <PropertyColumn Title="@column.Title"
                                 Property="@(c => typeof(WeatherForecast).GetProperty(column.PropertyName).GetValue(c))"
                                 Format="@column.Format"
-                                Style="@column.Width"
+                                Width="@column.Width"
                                 Sortable="@column.Sortable"
                                 Fixed="@column.Fixed">
                 </PropertyColumn>
@@ -99,10 +101,19 @@
         new ColumnConfig { Title = "Temp. (F)", PropertyName = "TemperatureF", Sortable = false, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 3 },
         new ColumnConfig { Title = "Hot", PropertyName = "Hot", Sortable = false, Visible = true, Width = "100px", InputType = "Switch", ColumnIndex = 4 },
         new ColumnConfig { Title = "Summary", PropertyName = "Summary", Sortable = true, Visible = true, Width = "200px", InputType = "TextBox", ColumnIndex = 5},
-        new ColumnConfig { Title = "Action", PropertyName = "Action", Sortable = false, Visible = true, Width = "200px", InputType = "Button", ColumnIndex = 8,Fixed = "right" },
-        new ColumnConfig { Title = "Summary Dropdown", PropertyName = "Summary", Sortable = false, Visible = true,Width = "300px", InputType = "Dropdown", ColumnIndex = 2, Options = new List<string> { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" } }
+        new ColumnConfig { Title = "Action", PropertyName = "Action", Sortable = false, Visible = true, Width = "200px", InputType = "Button", ColumnIndex = 8, Fixed = "right" },
+        new ColumnConfig
+        {
+            Title = "Summary Dropdown",
+            PropertyName = "Summary",
+            Sortable = false,
+            Visible = true,
+            Width = "300px",
+            InputType = "Dropdown",
+            ColumnIndex = 2,
+            Options = Summaries.Select(s => new SummaryOption { Name = s, Value = s }).ToList()
+        }
     };
-
 
     public class ColumnConfig
     {
@@ -114,8 +125,14 @@
         public string Width { get; set; }
         public string InputType { get; set; } // e.g., "Switch", "TextBox", "Button"
         public int ColumnIndex { get; set; }
-        public List<string> Options { get; set; } // Options for Dropdown
+        public List<SummaryOption> Options { get; set; } // Options for Dropdown
         public string Fixed { get; set; }
+    }
+
+    public class SummaryOption
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
     }
 
     protected override async Task OnInitializedAsync()
@@ -179,6 +196,7 @@
         forecasts = forecasts.Where(x => x.Id != id).ToArray();
         _total = forecasts.Length;
     }
+
     public List<ColumnConfig> GetSortedColumnConfigs()
     {
         var sortedColumns = columnConfigs.OrderBy(c => c.ColumnIndex).ToList();
