@@ -23,7 +23,7 @@
             if (column.InputType == "Switch")
             {
                 <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => ((WeatherForecast)c).Hot)" Fixed="@column.Fixed">
-                    <Switch @bind-Value="((WeatherForecast)context).Hot"></Switch>
+                    <Switch Value="((WeatherForecast)context).Hot"></Switch>
                 </PropertyColumn>
             }
             else if (column.InputType == "Button")
@@ -36,17 +36,23 @@
             }
             else if (column.InputType == "Dropdown")
             {
-                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => ((WeatherForecast)c).Summary)" Fixed="@column.Fixed">
-                    <Select TItem="SummaryOption"
+                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => GetSummaryValue(c, column.PropertyName))" Fixed="@column.Fixed">
+                    <Select TItem="DropDownOption"
                             TItemValue="string"
-                            DataSource="@(column.Options.Cast<SummaryOption>().ToList())"
-                            @bind-Value="((WeatherForecast)context).Summary"
-                            LabelName="@nameof(SummaryOption.Name)"
-                            ValueName="@nameof(SummaryOption.Value)"
+                            DataSource="@(column.Options.Cast<DropDownOption>().ToList())"
+                            Value="@GetSummaryValue((WeatherForecast)context, column.PropertyName)"
+                            LabelName="@nameof(DropDownOption.Name)"
+                            ValueName="@nameof(DropDownOption.Value)"
                             Placeholder="Select a summary"
                             DefaultActiveFirstOption="false"
                             EnableSearch>
                     </Select>
+                </PropertyColumn>
+            }
+            else if (column.InputType == "TextBox")
+            {
+                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => GetSummaryValue(c, column.PropertyName))" Fixed="@column.Fixed">
+                    <Input Value="@GetSummaryValue((WeatherForecast)context, column.PropertyName)" />
                 </PropertyColumn>
             }
             else
@@ -74,7 +80,7 @@
 
     @foreach (var selected in selectedRows)
     {
-        <Tag @key="selected.Id" Closable OnClose="e => RemoveSelection(selected.Id)">@selected.Id - @selected.Summary</Tag>
+        <Tag @key="selected.Id" Closable OnClose="e => RemoveSelection(selected.Id)">@selected.Id - @selected.Summary1</Tag>
     }
 }
 
@@ -95,26 +101,67 @@
 
     private List<ColumnConfig> columnConfigs = new List<ColumnConfig>
     {
-        new ColumnConfig { Title = "Identity", PropertyName = "Id", Sortable = true, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 6  },
-        new ColumnConfig { Title = "Date", PropertyName = "Date", Sortable = true, Visible = true, Width = "150px", InputType = "Date", ColumnIndex = 1},
-        new ColumnConfig { Title = "Temp. (C)", PropertyName = "TemperatureC", Sortable = true, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 7 },
-        new ColumnConfig { Title = "Temp. (F)", PropertyName = "TemperatureF", Sortable = false, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 3 },
-        new ColumnConfig { Title = "Hot", PropertyName = "Hot", Sortable = false, Visible = true, Width = "100px", InputType = "Switch", ColumnIndex = 4 },
-        new ColumnConfig { Title = "Summary", PropertyName = "Summary", Sortable = true, Visible = true, Width = "200px", InputType = "TextBox", ColumnIndex = 5},
-        new ColumnConfig { Title = "Action", PropertyName = "Action", Sortable = false, Visible = true, Width = "200px", InputType = "Button", ColumnIndex = 8, Fixed = "right" },
+        new ColumnConfig { Title = "Identity", PropertyName = "Id", Sortable = true, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 1  },
+        new ColumnConfig { Title = "Date", PropertyName = "Date", Sortable = true, Visible = true, Width = "150px", InputType = "Date", ColumnIndex = 2},
+        new ColumnConfig { Title = "Temp. (C)", PropertyName = "TemperatureC", Sortable = true, Visible = true, Width = "100px", InputType = "TextBox", ColumnIndex = 3 },
+        new ColumnConfig { Title = "Temp. (F)", PropertyName = "TemperatureF", Sortable = false, Visible = true, Width = "100px",  ColumnIndex = 4 },
+        new ColumnConfig { Title = "Hot", PropertyName = "Hot", Sortable = false, Visible = true, Width = "100px", InputType = "Switch", ColumnIndex = 5 },
+        new ColumnConfig { Title = "SummaryText", PropertyName = "SummaryText", Sortable = true, Visible = true, Width = "200px", InputType = "TextBox", ColumnIndex = 6},
+        new ColumnConfig { Title = "Action", PropertyName = "Action", Sortable = false, Visible = true, Width = "200px", InputType = "Button", ColumnIndex = 9, Fixed = "right" },
         new ColumnConfig
         {
             Title = "Summary Dropdown",
-            PropertyName = "Summary",
+            PropertyName = "Summary1",
             Sortable = false,
             Visible = true,
             Width = "300px",
             InputType = "Dropdown",
-            ColumnIndex = 2,
-            Options = Summaries.Select(s => new SummaryOption { Name = s, Value = s }).ToList()
+            ColumnIndex = 7,
+            Options = Summaries.Select(s => new DropDownOption { Name = s, Value = s }).ToList()
+        },
+         new ColumnConfig
+        {
+            Title = "Summary Dropdown2",
+            PropertyName = "Summary2",
+            Sortable = false,
+            Visible = true,
+            Width = "300px",
+            InputType = "Dropdown",
+            ColumnIndex = 8,
+            Options = Summaries2.Select(s => new DropDownOption { Name = s, Value = s }).ToList()
         }
-    };
 
+    };
+    private string GetSummaryValue(WeatherForecast forecast, string propertyName)
+    {
+        // Get the property from the WeatherForecast object
+        var propertyInfo = typeof(WeatherForecast).GetProperty(propertyName);
+
+        // Return the property's value if it exists
+        return propertyInfo != null ? propertyInfo.GetValue(forecast)?.ToString() : null;
+    }
+
+
+
+    // private void SetSummaryValue(WeatherForecast forecast, string propertyName, string value)
+    // {
+    //     if (propertyName == "Summary")
+    //     {
+    //         forecast.Summary = value;
+    //     }
+    //     else
+    //     {
+    //         forecast.Summary2 = value;
+    //     }
+    // }
+    // private async Task OnSummaryValueChanged(WeatherForecast forecast, string propertyName, string value)
+    // {
+    //     SetSummaryValue(forecast, propertyName, value);
+    //     StateHasChanged(); // Update the UI
+
+    //     // Trigger table refresh if needed
+    //    // await table.ReloadDataAsync();
+    // }
     public class ColumnConfig
     {
         public string Title { get; set; }
@@ -125,11 +172,11 @@
         public string Width { get; set; }
         public string InputType { get; set; } // e.g., "Switch", "TextBox", "Button"
         public int ColumnIndex { get; set; }
-        public List<SummaryOption> Options { get; set; } // Options for Dropdown
+        public List<DropDownOption> Options { get; set; } // Options for Dropdown
         public string Fixed { get; set; }
     }
 
-    public class SummaryOption
+    public class DropDownOption
     {
         public string Name { get; set; }
         public string Value { get; set; }
@@ -151,8 +198,12 @@
         [DisplayName("Temp. (C)")]
         public int TemperatureC { get; set; }
 
-        [DisplayName("Summary")]
-        public string Summary { get; set; }
+        [DisplayName("Summary1")]
+        public string Summary1 { get; set; }
+        [DisplayName("Summary2")]
+        public string Summary2 { get; set; }
+        [DisplayName("SummaryText")]
+        public string SummaryText { get; set; }
 
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 
@@ -163,6 +214,11 @@
     {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
+    private static readonly string[] Summaries2 = new[]
+    {
+        "F", "B", "CL", "Co", "M", "ML", "BL", "HT", "SW", "SC"
+    };
+
 
     public async Task OnChange(QueryModel<WeatherForecast> queryModel)
     {
@@ -180,8 +236,10 @@
                     Id = index,
                     Date = DateTime.Now.AddDays(index),
                     TemperatureC = temperatureC,
-                    Summary = Summaries[rng.Next(Summaries.Length)],
+                    Summary1 = Summaries[rng.Next(Summaries.Length)],
                     Hot = temperatureC > 30,
+                    Summary2 = Summaries2[rng.Next(Summaries2.Length)],
+                    SummaryText = "Summary Text " + index
                 };
         }).ToArray());
     }
