@@ -22,8 +22,11 @@
         {
             if (column.InputType == "Switch")
             {
-                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => ((WeatherForecast)c).Hot)" Fixed="@column.Fixed">
-                    <Switch Value="((WeatherForecast)context).Hot"></Switch>
+                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => GetBoolPropertyValue(c, column.PropertyName))" Fixed="@column.Fixed">
+                    <Switch Value="@GetBoolPropertyValue((WeatherForecast)context, column.PropertyName)"
+                            CheckedChildren="Yes"
+                            UnCheckedChildren="No"
+                             />
                 </PropertyColumn>
             }
             else if (column.InputType == "Button")
@@ -36,11 +39,11 @@
             }
             else if (column.InputType == "Dropdown")
             {
-                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => GetSummaryValue(c, column.PropertyName))" Fixed="@column.Fixed">
+                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => GetDropDownValue(c, column.PropertyName))" Fixed="@column.Fixed">
                     <Select TItem="DropDownOption"
                             TItemValue="string"
                             DataSource="@(column.Options.Cast<DropDownOption>().ToList())"
-                            Value="@GetSummaryValue((WeatherForecast)context, column.PropertyName)"
+                            Value="@GetDropDownValue((WeatherForecast)context, column.PropertyName)"
                             LabelName="@nameof(DropDownOption.Name)"
                             ValueName="@nameof(DropDownOption.Value)"
                             Placeholder="Select a summary"
@@ -51,8 +54,8 @@
             }
             else if (column.InputType == "TextBox")
             {
-                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => GetSummaryValue(c, column.PropertyName))" Fixed="@column.Fixed">
-                    <Input Value="@GetSummaryValue((WeatherForecast)context, column.PropertyName)" />
+                <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => GetDropDownValue(c, column.PropertyName))" Fixed="@column.Fixed">
+                    <Input Value="@GetDropDownValue((WeatherForecast)context, column.PropertyName)" />
                 </PropertyColumn>
             }
             else
@@ -107,7 +110,9 @@
         new ColumnConfig { Title = "Temp. (F)", PropertyName = "TemperatureF", Sortable = false, Visible = true, Width = "100px",  ColumnIndex = 4 },
         new ColumnConfig { Title = "Hot", PropertyName = "Hot", Sortable = false, Visible = true, Width = "100px", InputType = "Switch", ColumnIndex = 5 },
         new ColumnConfig { Title = "SummaryText", PropertyName = "SummaryText", Sortable = true, Visible = true, Width = "200px", InputType = "TextBox", ColumnIndex = 6},
-        new ColumnConfig { Title = "Action", PropertyName = "Action", Sortable = false, Visible = true, Width = "200px", InputType = "Button", ColumnIndex = 9, Fixed = "right" },
+        new ColumnConfig { Title = "Action", PropertyName = "Action", Sortable = false, Visible = true, Width = "200px", InputType = "Button", ColumnIndex = 10, Fixed = "right" },
+        new ColumnConfig { Title = "AreYouReady", PropertyName = "AreYouReady", Sortable = false, Visible = true, Width = "100px", InputType = "Switch", ColumnIndex = 9 },
+
         new ColumnConfig
         {
             Title = "Summary Dropdown",
@@ -122,7 +127,7 @@
          new ColumnConfig
         {
             Title = "Summary Dropdown2",
-            PropertyName = "Summary2",
+            PropertyName = "Summary1",
             Sortable = false,
             Visible = true,
             Width = "300px",
@@ -132,7 +137,7 @@
         }
 
     };
-    private string GetSummaryValue(WeatherForecast forecast, string propertyName)
+    private string GetDropDownValue(WeatherForecast forecast, string propertyName)
     {
         // Get the property from the WeatherForecast object
         var propertyInfo = typeof(WeatherForecast).GetProperty(propertyName);
@@ -141,27 +146,21 @@
         return propertyInfo != null ? propertyInfo.GetValue(forecast)?.ToString() : null;
     }
 
+    private bool GetBoolPropertyValue(WeatherForecast forecast, string propertyName)
+    {
+        var propertyInfo = typeof(WeatherForecast).GetProperty(propertyName);
+        if (propertyInfo != null)
+        {
+            var value = propertyInfo.GetValue(forecast);
+            if (value != null && propertyInfo.PropertyType == typeof(bool))
+            {
+                return (bool)value;
+            }
+        }
+        return false; // Default to false if the property is not a boolean or not found
+    }
 
 
-    // private void SetSummaryValue(WeatherForecast forecast, string propertyName, string value)
-    // {
-    //     if (propertyName == "Summary")
-    //     {
-    //         forecast.Summary = value;
-    //     }
-    //     else
-    //     {
-    //         forecast.Summary2 = value;
-    //     }
-    // }
-    // private async Task OnSummaryValueChanged(WeatherForecast forecast, string propertyName, string value)
-    // {
-    //     SetSummaryValue(forecast, propertyName, value);
-    //     StateHasChanged(); // Update the UI
-
-    //     // Trigger table refresh if needed
-    //    // await table.ReloadDataAsync();
-    // }
     public class ColumnConfig
     {
         public string Title { get; set; }
@@ -208,6 +207,7 @@
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 
         public bool Hot { get; set; }
+        public bool AreYouReady { get; set; }
     }
 
     private static readonly string[] Summaries = new[]
@@ -239,7 +239,8 @@
                     Summary1 = Summaries[rng.Next(Summaries.Length)],
                     Hot = temperatureC > 30,
                     Summary2 = Summaries2[rng.Next(Summaries2.Length)],
-                    SummaryText = "Summary Text " + index
+                    SummaryText = "Summary Text " + index,
+                    AreYouReady = rng.Next(2) == 0 ? true : false
                 };
         }).ToArray());
     }
