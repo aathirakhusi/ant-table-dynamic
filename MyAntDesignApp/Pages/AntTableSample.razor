@@ -22,16 +22,22 @@
         {
             if (column.InputType == "Switch")
             {
+
                 <PropertyColumn Width="@column.Width" Title="@column.Title" Property="@(c => GetBoolPropertyValue(c, column.PropertyName))" Fixed="@column.Fixed">
                     <Switch Value="@GetBoolPropertyValue((WeatherForecast)context, column.PropertyName)"
                             CheckedChildren="Yes"
                             UnCheckedChildren="No"
                              />
+
+           
+
                 </PropertyColumn>
             }
             else if (column.InputType == "Button")
             {
+
                 <ActionColumn Width="@column.Width" Title="@column.Title" Fixed="@column.Fixed">
+
                     <Space>
                         <SpaceItem><Button Danger OnClick="@(() => Delete(((WeatherForecast)context).Id))">Delete</Button></SpaceItem>
                     </Space>
